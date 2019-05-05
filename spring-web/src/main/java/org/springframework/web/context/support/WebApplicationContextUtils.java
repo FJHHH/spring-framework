@@ -113,6 +113,7 @@ public abstract class WebApplicationContextUtils {
 		if (attr == null) {
 			return null;
 		}
+		// 如果由异常或 error 抛出
 		if (attr instanceof RuntimeException) {
 			throw (RuntimeException) attr;
 		}
@@ -122,6 +123,7 @@ public abstract class WebApplicationContextUtils {
 		if (attr instanceof Exception) {
 			throw new IllegalStateException((Exception) attr);
 		}
+		// 检查类型
 		if (!(attr instanceof WebApplicationContext)) {
 			throw new IllegalStateException("Context attribute is not of type WebApplicationContext: " + attr);
 		}

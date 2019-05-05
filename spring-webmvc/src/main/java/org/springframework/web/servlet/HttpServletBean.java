@@ -146,15 +146,19 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 	 */
 	@Override
 	public final void init() throws ServletException {
-
 		// Set bean properties from init parameters.
+		// 从 ServletConfig 中取出初始化参数到 PropertyValues。ServletConfigPropertyValues 的构造器中将会检查是否缺失了必要属性
 		PropertyValues pvs = new ServletConfigPropertyValues(getServletConfig(), this.requiredProperties);
 		if (!pvs.isEmpty()) {
 			try {
+				// 将 servlet 对象包装成 BeanWrapper ，从而能够以 Spring 的方式（反射）来注入参数
 				BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(this);
 				ResourceLoader resourceLoader = new ServletContextResourceLoader(getServletContext());
+				// 注册 PropertyEditor，遇到 Resource 类型的属性时，用 ResourceEditor 解析
 				bw.registerCustomEditor(Resource.class, new ResourceEditor(resourceLoader, getEnvironment()));
+				// 初始化 BeanWrapper，空方法
 				initBeanWrapper(bw);
+				// 注入属性，忽略没有 setter 的属性
 				bw.setPropertyValues(pvs, true);
 			}
 			catch (BeansException ex) {
@@ -164,8 +168,8 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 				throw ex;
 			}
 		}
-
 		// Let subclasses do whatever initialization they like.
+		// 由子类实现初始化逻辑
 		initServletBean();
 	}
 
@@ -216,10 +220,11 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 		 */
 		public ServletConfigPropertyValues(ServletConfig config, Set<String> requiredProperties)
 				throws ServletException {
-
+			// 将 requiredProperties 拷贝到新的 Set missingProps
 			Set<String> missingProps = (!CollectionUtils.isEmpty(requiredProperties) ?
 					new HashSet<>(requiredProperties) : null);
 
+			// 将 ServletConfig 中的初始化参数取出，添加到 MutablePropertyValues 中
 			Enumeration<String> paramNames = config.getInitParameterNames();
 			while (paramNames.hasMoreElements()) {
 				String property = paramNames.nextElement();
@@ -232,6 +237,7 @@ public abstract class HttpServletBean extends HttpServlet implements Environment
 
 			// Fail if we are still missing properties.
 			if (!CollectionUtils.isEmpty(missingProps)) {
+				// 存在必须出现的条件没出现
 				throw new ServletException(
 						"Initialization from ServletConfig for servlet '" + config.getServletName() +
 						"' failed; the following required properties were missing: " +
